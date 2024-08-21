@@ -4,6 +4,9 @@ import os
 from io import BytesIO
 import tempfile
 from datetime import datetime
+from openpyxl import load_workbook
+from openpyxl.styles import PatternFill, Font, Alignment
+import re
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Needed for session handling
@@ -293,32 +296,127 @@ def index():
             'No (Visit Pending)': output_df4['No (Visit Pending)'].sum(),
             'Val (In Lacs) (Visit Pending)': output_df4['Val (In Lacs) (Visit Pending)'].sum()
         }
-
         # Append the totals row to output_df2
         output_df4 = output_df4.append(totals4, ignore_index=True)
 
-        # Save both dataframes to a temporary Excel file with two sheets
+        output_df5 = pd.DataFrame(columns=[
+            'CCM', 'Visit Pending', 'WIP- Credit', 'Recommend', 'Reject', 'Query- Sales',
+            'Sanction', 'Disbursed', 'Grand Total'
+        ])
+
+
+        for (ccm), group in df.groupby('CCM'):
+            vp_count5 = group[group['Initial File Status (Credit)'] == 'Visit Pending'].shape[0]
+            wip_count5 = group[group['Initial File Status (Credit)'] == 'WIP- Credit'].shape[0]
+            recc_count5 = group[group['Initial File Status (Credit)'] == 'Recommend'].shape[0]
+            reject_count5 = group[group['Initial File Status (Credit)'] == 'Reject'].shape[0]
+            qs_count5 = group[group['Initial File Status (Credit)'] == 'Query- Sales'].shape[0]
+            sanction_count5 = group[group['Initial File Status (Credit)'] == 'Sanction'].shape[0]
+            disb_count5 = group[group['Initial File Status (Credit)'] == 'Disbursed'].shape[0]
+            gt_count= vp_count5+wip_count5+recc_count5+reject_count5+sanction_count5+disb_count5
+
+            output_df5 = output_df5.append({
+                'CCM': ccm,
+                'Visit Pending': vp_count5,
+                'WIP- Credit': wip_count5,
+                'Recommend': recc_count5,
+                'Reject': reject_count5,
+                'Query- Sales':qs_count5,
+                'Sanction': sanction_count5,
+                'Disbursed': disb_count5,
+                'Grand Total': gt_count,
+
+            }, ignore_index=True)
+
+        totals5 = {
+            'CCM': 'Grand Total',
+            'Visit Pending': output_df5['Visit Pending'].sum(),
+            'WIP- Credit': output_df5['WIP- Credit'].sum(),
+            'Recommend': output_df5['Recommend'].sum(),
+            'Reject': output_df5['Reject'].sum(),
+            'Query- Sales': output_df5['Query- Sales'].sum(),
+            'Sanction': output_df5['Sanction'].sum(),
+            'Disbursed': output_df5['Disbursed'].sum(),
+            'Grand Total': output_df5['Grand Total'].sum(),
+
+        }
+
+        # Append the totals row to output_df2
+        output_df5 = output_df5.append(totals5, ignore_index=True)
+
+
+        # Save dataframes to a temporary Excel file with multiple sheets
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx')
         with pd.ExcelWriter(temp_file.name, engine='xlsxwriter') as writer:
             output_df1.to_excel(writer, index=False, sheet_name='CCM FTD')
             output_df2.to_excel(writer, index=False, sheet_name='CCM MTD')
             output_df3.to_excel(writer, index=False, sheet_name='CBM FTD')
             output_df4.to_excel(writer, index=False, sheet_name='CBM MTD')
+            output_df5.to_excel(writer, index=False, sheet_name='SWS')
 
 
         temp_file_path = temp_file.name
 
-        # Convert the first dataframe to an HTML table for preview
-        output_html = output_df1.to_html(index=False)
+        # Load the workbook and apply formatting
+        workbook = load_workbook(temp_file_path)
 
+        # Define styles
+        header_font = Font(bold=True, color="FFFFFF", size=12, name='Calibri')
+        header_fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
+
+        total_font = Font(bold=True, color="FFFFFF", size=12, name='Calibri')
+        total_fill = PatternFill(start_color="0000FF", end_color="0000FF", fill_type="solid")
+
+        cell_font = Font(size=11, name='Calibri')
+        alignment = Alignment(horizontal='center', vertical='center')
+
+        for sheet_name in workbook.sheetnames:
+            worksheet = workbook[sheet_name]
+
+            # Apply styles to the header
+            for cell in worksheet[1]:
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = alignment
+
+            # Apply styles to the cells
+            for row in worksheet.iter_rows(min_row=2, max_col=worksheet.max_column, max_row=worksheet.max_row):
+                for cell in row:
+                    cell.font = cell_font
+                    cell.alignment = alignment
+
+                # Apply formatting to the "Total" row
+                if row[0].value == 'Total' or row[0].value == 'Grand Total':
+                    for cell in row:
+                        cell.font = total_font
+                        cell.fill = total_fill
+                else:
+                    for cell in row:
+                        cell.fill = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
+
+            # Adjust column widths based on the maximum length of the content
+            for column in worksheet.columns:
+                max_length = 0
+                column_letter = column[0].column_letter  # Get the column letter (A, B, C, etc.)
+                for cell in column:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(cell.value)
+                    except:
+                        pass
+                adjusted_width = (max_length + 2)  # Add some padding
+                worksheet.column_dimensions[column_letter].width = adjusted_width
+
+        # Save the modified workbook back to the same file
+        workbook.save(temp_file_path)
+
+        # Return the modified Excel file as a download
         return send_file(temp_file_path, as_attachment=True, download_name='output.xlsx')
 
     return render_template('index.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
 
 
 
