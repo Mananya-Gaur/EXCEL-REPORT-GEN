@@ -1,297 +1,3 @@
-# from flask import Flask, render_template, request, send_file
-# import pandas as pd
-# import os
-# from io import BytesIO
-# import tempfile
-#
-# app = Flask(__name__)
-# app.secret_key = 'your_secret_key'  # Needed for session handling
-#
-#
-# @app.route('/', methods=['GET', 'POST'])
-# def index():
-#     if request.method == 'POST':
-#         file1 = request.files['file1']
-#         selected_date = pd.to_datetime(request.form['date'])  # Match the HTML form field name
-#
-#         # Process the uploaded files
-#         df1 = pd.read_excel(file1)
-#
-#         # Combine and process the dataframes (example logic)
-#         df_combined = df1
-#         df_combined['Login Date'] = pd.to_datetime(df_combined['Login Date'], format='%d-%m-%Y')
-#         filtered_df = df_combined[df_combined['Login Date'] == selected_date]
-#
-#         # Further processing and generating the output dataframe
-#         output_df = pd.DataFrame(columns=[
-#             'CCM', 'BM Name', 'Branches', 'No (Login)', 'Val (In Lacs) (Login)',
-#             'No (Sanction)', 'Val (In Lacs) (Sanction)', 'No (Reject/Withdraw)',
-#             'Val (In Lacs) (Reject/Withdraw)', 'No (Decision)', 'Val (In Lacs) (Decision)',
-#             'No (Disbursed)', 'Val (In Lacs) (Disbursed)'
-#         ])
-#
-#         grouped = filtered_df.groupby(['CCM', 'BM Name', 'Branches'])
-#
-#         for (ccm, bm_name, branches), group in grouped:
-#             login_count = group['Lead ID (Synofin)'].nunique()
-#             login_val = group['Request Amount'].sum() / 100000
-#             sanction_count = group[group['Initial File Status (Credit)'] == 'Sanction'].shape[0]
-#             sanction_val = group[group['Initial File Status (Credit)'] == 'Sanction']['Sanction Amount'].sum() / 100000
-#             reject_count = group[group['Initial File Status (Credit)'] == 'Reject'].shape[0]
-#             reject_val = group[group['Initial File Status (Credit)'] == 'Reject']['Request Amount'].sum() / 100000
-#             decision_count = sanction_count + reject_count
-#             decision_val = sanction_val + reject_val
-#             disbursed_count = group[group['Disb. Date'].notnull()].shape[0]
-#             disbursed_val = group[group['Disb. Date'].notnull()]['Sanction Amount'].sum() / 100000
-#
-#             output_df = output_df.append({
-#                 'CCM': ccm,
-#                 'BM Name': bm_name,
-#                 'Branches': branches,
-#                 'No (Login)': login_count,
-#                 'Val (In Lacs) (Login)': login_val,
-#                 'No (Sanction)': sanction_count,
-#                 'Val (In Lacs) (Sanction)': sanction_val,
-#                 'No (Reject/Withdraw)': reject_count,
-#                 'Val (In Lacs) (Reject/Withdraw)': reject_val,
-#                 'No (Decision)': decision_count,
-#                 'Val (In Lacs) (Decision)': decision_val,
-#                 'No (Disbursed)': disbursed_count,
-#                 'Val (In Lacs) (Disbursed)': disbursed_val
-#             }, ignore_index=True)
-#
-#         # Convert the dataframe to an HTML table for preview
-#         output_html = output_df.to_html(classes='table table-striped', index=False)
-#
-#         # Save the output_df to a temporary file
-#         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx')
-#         with pd.ExcelWriter(temp_file.name, engine='xlsxwriter') as writer:
-#             output_df.to_excel(writer, index=False, sheet_name='Report')
-#
-#         # Store the path to pass it for downloading
-#         temp_file_path = temp_file.name
-#
-#         return render_template('preview.html', table=output_html, temp_file_path=temp_file_path)
-#
-#     return render_template('index.html')
-#
-#
-# @app.route('/download', methods=['POST'])
-# def download():
-#     temp_path = request.form['temp_file_path']
-#
-#     if not temp_path or not os.path.exists(temp_path):
-#         return "File not found or the path is invalid", 400
-#
-#     # Send the file as an attachment
-#     return send_file(temp_path, as_attachment=True, download_name='report.xlsx',
-#                      mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-#
-#
-# if __name__ == '__main__':
-#     app.run(debug=True)
-
-# from flask import Flask, render_template, request, send_file
-# import pandas as pd
-# import os
-# from io import BytesIO
-# import tempfile
-#
-# app = Flask(__name__)
-# app.secret_key = 'your_secret_key'  # Needed for session handling
-#
-#
-# @app.route('/', methods=['GET', 'POST'])
-# def index():
-#     if request.method == 'POST':
-#         file1 = request.files['file1']
-#         selected_date = pd.to_datetime(request.form['date'])  # Match the HTML form field name
-#
-#         # Process the uploaded files
-#         df1 = pd.read_excel(file1)
-#
-#         # Combine and process the dataframes (example logic)
-#         df_combined = df1
-#         df_combined['Login Date'] = pd.to_datetime(df_combined['Login Date'], format='%d-%m-%Y')
-#         filtered_df = df_combined[df_combined['Login Date'] == selected_date]
-#
-#         # Further processing and generating the output dataframe
-#         output_df = pd.DataFrame(columns=[
-#             'CCM', 'No (Login)', 'Val (In Lacs) (Login)',
-#             'No (Sanction)', 'Val (In Lacs) (Sanction)', 'No (Reject/Withdraw)',
-#             'Val (In Lacs) (Reject/Withdraw)', 'No (Decision)', 'Val (In Lacs) (Decision)',
-#             'No (Disbursed)', 'Val (In Lacs) (Disbursed)'
-#         ])
-#
-#         grouped = filtered_df.groupby(['CCM'])
-#
-#         for (ccm), group in grouped:
-#             login_count = group['Lead ID (Synofin)'].nunique()
-#             login_val = group['Request Amount'].sum() / 100000
-#             sanction_count = group[group['Initial File Status (Credit)'] == 'Sanction'].shape[0]
-#             sanction_val = group[group['Initial File Status (Credit)'] == 'Sanction']['Sanction Amount'].sum() / 100000
-#             reject_count = group[group['Initial File Status (Credit)'] == 'Reject'].shape[0]
-#             reject_val = group[group['Initial File Status (Credit)'] == 'Reject']['Request Amount'].sum() / 100000
-#             decision_count = sanction_count + reject_count
-#             decision_val = sanction_val + reject_val
-#             disbursed_count = group[group['Disb. Date'].notnull()].shape[0]
-#             disbursed_val = group[group['Disb. Date'].notnull()]['Sanction Amount'].sum() / 100000
-#
-#             output_df = output_df.append({
-#                 'CCM': ccm,
-#                 'No (Login)': login_count,
-#                 'Val (In Lacs) (Login)': login_val,
-#                 'No (Sanction)': sanction_count,
-#                 'Val (In Lacs) (Sanction)': sanction_val,
-#                 'No (Reject/Withdraw)': reject_count,
-#                 'Val (In Lacs) (Reject/Withdraw)': reject_val,
-#                 'No (Decision)': decision_count,
-#                 'Val (In Lacs) (Decision)': decision_val,
-#                 'No (Disbursed)': disbursed_count,
-#                 'Val (In Lacs) (Disbursed)': disbursed_val
-#             }, ignore_index=True)
-#
-#         # Convert the dataframe to an HTML table for preview
-#         output_html = output_df.to_html(classes='table table-striped', index=False)
-#
-#         # Save the output_df to a temporary file
-#         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx')
-#         with pd.ExcelWriter(temp_file.name, engine='xlsxwriter') as writer:
-#             output_df.to_excel(writer, index=False, sheet_name='Report')
-#
-#         # Store the path to pass it for downloading
-#         temp_file_path = temp_file.name
-#
-#         return render_template('preview.html', table=output_html, temp_file_path=temp_file_path)
-#
-#     return render_template('index.html')
-#
-#
-# @app.route('/download', methods=['POST'])
-# def download():
-#     temp_path = request.form['temp_file_path']
-#
-#     if not temp_path or not os.path.exists(temp_path):
-#         return "File not found or the path is invalid", 400
-#
-#     # Send the file as an attachment
-#     return send_file(temp_path, as_attachment=True, download_name='report.xlsx',
-#                      mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-#
-#
-# if __name__ == '__main__':
-#     app.run(debug=True)
-
-# from flask import Flask, render_template, request, send_file
-# import pandas as pd
-# import os
-# from io import BytesIO
-# import tempfile
-#
-# app = Flask(__name__)
-# app.secret_key = 'your_secret_key'  # Needed for session handling
-#
-# @app.route('/', methods=['GET', 'POST'])
-# def index():
-#     if request.method == 'POST':
-#         file1 = request.files['file1']
-#         selected_date = pd.to_datetime(request.form['date'])  # Match the HTML form field name
-#
-#         # Process the uploaded files
-#         df1 = pd.read_excel(file1)
-#
-#         # Combine and process the dataframes (example logic)
-#         df_combined = df1
-#         df_combined['Login Date'] = pd.to_datetime(df_combined['Login Date'], format='%d-%m-%Y')
-#         filtered_df = df_combined[df_combined['Login Date'] == selected_date]
-#
-#         # Further processing and generating the output dataframe
-#         output_df = pd.DataFrame(columns=[
-#             'CCM', 'No (Login)', 'Val (In Lacs) (Login)',
-#             'No (Sanction)', 'Val (In Lacs) (Sanction)', 'No (Reject/Withdraw)',
-#             'Val (In Lacs) (Reject/Withdraw)', 'No (Decision)', 'Val (In Lacs) (Decision)',
-#             'No (Disbursed)', 'Val (In Lacs) (Disbursed)'
-#         ])
-#
-#         grouped = filtered_df.groupby(['CCM'])
-#
-#         for (ccm), group in grouped:
-#             login_count = group['Lead ID (Synofin)'].nunique()
-#             login_val = group['Request Amount'].sum() / 100000
-#             sanction_count = group[group['Initial File Status (Credit)'] == 'Sanction'].shape[0]
-#             sanction_val = group[group['Initial File Status (Credit)'] == 'Sanction']['Sanction Amount'].sum() / 100000
-#             reject_count = group[group['Initial File Status (Credit)'] == 'Reject'].shape[0]
-#             reject_val = group[group['Initial File Status (Credit)'] == 'Reject']['Request Amount'].sum() / 100000
-#             decision_count = sanction_count + reject_count
-#             decision_val = sanction_val + reject_val
-#             disbursed_count = group[group['Disb. Date'].notnull()].shape[0]
-#             disbursed_val = group[group['Disb. Date'].notnull()]['Sanction Amount'].sum() / 100000
-#
-#             output_df = output_df.append({
-#                 'CCM': ccm,
-#                 'No (Login)': login_count,
-#                 'Val (In Lacs) (Login)': login_val,
-#                 'No (Sanction)': sanction_count,
-#                 'Val (In Lacs) (Sanction)': sanction_val,
-#                 'No (Reject/Withdraw)': reject_count,
-#                 'Val (In Lacs) (Reject/Withdraw)': reject_val,
-#                 'No (Decision)': decision_count,
-#                 'Val (In Lacs) (Decision)': decision_val,
-#                 'No (Disbursed)': disbursed_count,
-#                 'Val (In Lacs) (Disbursed)': disbursed_val
-#             }, ignore_index=True)
-#
-#         # Calculate totals
-#         totals = {
-#             'CCM': 'Total',
-#             'No (Login)': output_df['No (Login)'].sum(),
-#             'Val (In Lacs) (Login)': output_df['Val (In Lacs) (Login)'].sum(),
-#             'No (Sanction)': output_df['No (Sanction)'].sum(),
-#             'Val (In Lacs) (Sanction)': output_df['Val (In Lacs) (Sanction)'].sum(),
-#             'No (Reject/Withdraw)': output_df['No (Reject/Withdraw)'].sum(),
-#             'Val (In Lacs) (Reject/Withdraw)': output_df['Val (In Lacs) (Reject/Withdraw)'].sum(),
-#             'No (Decision)': output_df['No (Decision)'].sum(),
-#             'Val (In Lacs) (Decision)': output_df['Val (In Lacs) (Decision)'].sum(),
-#             'No (Disbursed)': output_df['No (Disbursed)'].sum(),
-#             'Val (In Lacs) (Disbursed)': output_df['Val (In Lacs) (Disbursed)'].sum()
-#
-#
-#         }
-#
-#         # Append the totals row
-#         output_df = output_df.append(totals, ignore_index=True)
-#
-#         # Convert the dataframe to an HTML table for preview
-#         output_html = output_df.to_html(classes='table table-striped', index=False)
-#
-#         # Save the output_df to a temporary file
-#         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx')
-#         with pd.ExcelWriter(temp_file.name, engine='xlsxwriter') as writer:
-#             output_df.to_excel(writer, index=False, sheet_name='Report')
-#
-#         # Store the path to pass it for downloading
-#         temp_file_path = temp_file.name
-#
-#         return render_template('preview.html', table=output_html, temp_file_path=temp_file_path)
-#
-#     return render_template('index.html')
-#
-#
-# @app.route('/download', methods=['POST'])
-# def download():
-#     temp_path = request.form['temp_file_path']
-#
-#     if not temp_path or not os.path.exists(temp_path):
-#         return "File not found or the path is invalid", 400
-#
-#     # Send the file as an attachment
-#     return send_file(temp_path, as_attachment=True, download_name='report.xlsx',
-#                      mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-#
-#
-# if __name__ == '__main__':
-#     app.run(debug=True)
-
 from flask import Flask, render_template, request, send_file
 import pandas as pd
 import os
@@ -378,11 +84,14 @@ def index():
 
         user_date = selected_date
         current_month = user_date.strftime('%b')
-        previous_month = (user_date.replace(day=1) - pd.DateOffset(months=1)).strftime('%b')
+
+        # Collect all previous months
+        all_previous_months = [user_date.replace(day=1) - pd.DateOffset(months=i) for i in range(1, user_date.month)]
+        previous_months_str = [month.strftime('%b') for month in all_previous_months]
 
         for ccm, group in df.groupby(['CCM']):
             aug_group = group[group['MONTH'] == current_month]
-            naug_group = group[group['MONTH'] == previous_month]
+            naug_group = group[group['MONTH'].isin(previous_months_str)]
 
             spfno = len(naug_group)
             spfval = naug_group['Request Amount'].sum() / 100000
@@ -425,11 +134,177 @@ def index():
                 'Val (In Lacs) (Visit Pending)': vp_val
             }, ignore_index=True)
 
+    # Assuming output_df2 is already created and populated
+
+    # Calculate totals for each numeric column
+        totals2 = {
+        'CCM': 'Total',
+        'No (Spill File)': output_df2['No (Spill File)'].sum(),
+        'Val (In Lacs) (Spill File)': output_df2['Val (In Lacs) (Spill File)'].sum(),
+        'No (Fresh Login)': output_df2['No (Fresh Login)'].sum(),
+        'Val (In Lacs) (Fresh Login)': output_df2['Val (In Lacs) (Fresh Login)'].sum(),
+        'No (Total File)': output_df2['No (Total File)'].sum(),
+        'Val (In Lacs) (Total File)': output_df2['Val (In Lacs) (Total File)'].sum(),
+        'No (Sanction/Disbursed)': output_df2['No (Sanction/Disbursed)'].sum(),
+        'Val (In Lacs) (Sanction/Disbursed)': output_df2['Val (In Lacs) (Sanction/Disbursed)'].sum(),
+        'No (Reject/Withdraw)': output_df2['No (Reject/Withdraw)'].sum(),
+        'Val (In Lacs) (Reject/Withdraw)': output_df2['Val (In Lacs) (Reject/Withdraw)'].sum(),
+        'No (Recommend)': output_df2['No (Recommend)'].sum(),
+        'Val (In Lacs) (Recommend)': output_df2['Val (In Lacs) (Recommend)'].sum(),
+        'No (Query-Sales)': output_df2['No (Query-Sales)'].sum(),
+        'Val (In Lacs) (Query-Sales)': output_df2['Val (In Lacs) (Query-Sales)'].sum(),
+        'No (WIP-Credit)': output_df2['No (WIP-Credit)'].sum(),
+        'Val (In Lacs) (WIP-Credit)': output_df2['Val (In Lacs) (WIP-Credit)'].sum(),
+        'No (Visit Pending)': output_df2['No (Visit Pending)'].sum(),
+        'Val (In Lacs) (Visit Pending)': output_df2['Val (In Lacs) (Visit Pending)'].sum()
+    }
+
+    # Append the totals row to output_df2
+        output_df2 = output_df2.append(totals2, ignore_index=True)
+
+        output_df3 = pd.DataFrame(columns=[
+            'CBM', 'No (Login)', 'Val (In Lacs) (Login)',
+            'No (Sanction)', 'Val (In Lacs) (Sanction)', 'No (Reject/Withdraw)',
+            'Val (In Lacs) (Reject/Withdraw)', 'No (Decision)', 'Val (In Lacs) (Decision)',
+            'No (Disbursed)', 'Val (In Lacs) (Disbursed)'
+        ])
+
+        grouped1 = filtered_df.groupby(['CBM'])
+
+        for (cbm), group in grouped1:
+            login_count = group['Lead ID (Synofin)'].nunique()
+            login_val = group['Request Amount'].sum() / 100000
+            sanction_count = group[group['Initial File Status (Credit)'] == 'Sanction'].shape[0]
+            sanction_val = group[group['Initial File Status (Credit)'] == 'Sanction']['Sanction Amount'].sum() / 100000
+            reject_count = group[group['Initial File Status (Credit)'] == 'Reject'].shape[0]
+            reject_val = group[group['Initial File Status (Credit)'] == 'Reject']['Request Amount'].sum() / 100000
+            decision_count = sanction_count + reject_count
+            decision_val = sanction_val + reject_val
+            disbursed_count = group[group['Disb. Date'].notnull()].shape[0]
+            disbursed_val = group[group['Disb. Date'].notnull()]['Sanction Amount'].sum() / 100000
+
+            output_df3 = output_df3.append({
+                'CBM': cbm,
+                'No (Login)': login_count,
+                'Val (In Lacs) (Login)': login_val,
+                'No (Sanction)': sanction_count,
+                'Val (In Lacs) (Sanction)': sanction_val,
+                'No (Reject/Withdraw)': reject_count,
+                'Val (In Lacs) (Reject/Withdraw)': reject_val,
+                'No (Decision)': decision_count,
+                'Val (In Lacs) (Decision)': decision_val,
+                'No (Disbursed)': disbursed_count,
+                'Val (In Lacs) (Disbursed)': disbursed_val
+            }, ignore_index=True)
+
+        totals3 = {
+            'CBM': 'Total',
+            'No (Login)': output_df3['No (Login)'].sum(),
+            'Val (In Lacs) (Login)': output_df3['Val (In Lacs) (Login)'].sum(),
+            'No (Sanction)': output_df3['No (Sanction)'].sum(),
+            'Val (In Lacs) (Sanction)': output_df3['Val (In Lacs) (Sanction)'].sum(),
+            'No (Reject/Withdraw)': output_df3['No (Reject/Withdraw)'].sum(),
+            'Val (In Lacs) (Reject/Withdraw)': output_df3['Val (In Lacs) (Reject/Withdraw)'].sum(),
+            'No (Decision)': output_df3['No (Decision)'].sum(),
+            'Val (In Lacs) (Decision)': output_df3['Val (In Lacs) (Decision)'].sum(),
+            'No (Disbursed)': output_df3['No (Disbursed)'].sum(),
+            'Val (In Lacs) (Disbursed)': output_df3['Val (In Lacs) (Disbursed)'].sum()
+        }
+        # Append the totals row to output_df2
+        output_df3 = output_df3.append(totals3, ignore_index=True)
+
+        # Second DataFrame processing (from code2)
+        output_df4 = pd.DataFrame(columns=[
+            'CBM', 'No (Spill File)', 'Val (In Lacs) (Spill File)', 'No (Fresh Login)', 'Val (In Lacs) (Fresh Login)',
+            'No (Total File)', 'Val (In Lacs) (Total File)', 'No (Sanction/Disbursed)',
+            'Val (In Lacs) (Sanction/Disbursed)',
+            'No (Reject/Withdraw)', 'Val (In Lacs) (Reject/Withdraw)', 'No (Recommend)', 'Val (In Lacs) (Recommend)',
+            'No (Query-Sales)', 'Val (In Lacs) (Query-Sales)', 'No (WIP-Credit)', 'Val (In Lacs) (WIP-Credit)',
+            'No (Visit Pending)', 'Val (In Lacs) (Visit Pending)'
+        ])
+
+
+        for cbm, group in df.groupby(['CBM']):
+            aug_group = group[group['MONTH'] == current_month]
+            naug_group = group[group['MONTH'].isin(previous_months_str)]
+
+            spfno = len(naug_group)
+            spfval = naug_group['Request Amount'].sum() / 100000
+            frshlg = len(aug_group)
+            frshval = aug_group['Request Amount'].sum() / 100000
+            totalno = spfno + frshlg
+            totalval = spfval + frshval
+            sandis_count = group[group['Initial File Status (Credit)'] == 'Sanction'].shape[0]
+            sandis_val = group[group['Initial File Status (Credit)'] == 'Sanction']['Sanction Amount'].sum() / 100000
+            reject_count = group[group['Initial File Status (Credit)'] == 'Reject'].shape[0]
+            reject_val = group[group['Initial File Status (Credit)'] == 'Reject']['Request Amount'].sum() / 100000
+            rec_count = group[group['Initial File Status (Credit)'] == 'Recommend'].shape[0]
+            rec_val = group[group['Initial File Status (Credit)'] == 'Recommend']['Request Amount'].sum() / 100000
+            qs_count = group[group['Initial File Status (Credit)'] == 'Query- Sales'].shape[0]
+            qs_val = group[group['Initial File Status (Credit)'] == 'Query- Sales']['Request Amount'].sum() / 100000
+            wip_count = group[group['Initial File Status (Credit)'] == 'WIP- Credit'].shape[0]
+            wip_val = group[group['Initial File Status (Credit)'] == 'WIP- Credit']['Request Amount'].sum() / 100000
+            vp_count = group[group['Initial File Status (Credit)'] == 'Visit Pending'].shape[0]
+            vp_val = group[group['Initial File Status (Credit)'] == 'Visit Pending']['Request Amount'].sum() / 100000
+
+            output_df4 = output_df4.append({
+                'CBM': cbm,
+                'No (Spill File)': spfno,
+                'Val (In Lacs) (Spill File)': spfval,
+                'No (Fresh Login)': frshlg,
+                'Val (In Lacs) (Fresh Login)': frshval,
+                'No (Total File)': totalno,
+                'Val (In Lacs) (Total File)': totalval,
+                'No (Sanction/Disbursed)': sandis_count,
+                'Val (In Lacs) (Sanction/Disbursed)': sandis_val,
+                'No (Reject/Withdraw)': reject_count,
+                'Val (In Lacs) (Reject/Withdraw)': reject_val,
+                'No (Recommend)': rec_count,
+                'Val (In Lacs) (Recommend)': rec_val,
+                'No (Query-Sales)': qs_count,
+                'Val (In Lacs) (Query-Sales)': qs_val,
+                'No (WIP-Credit)': wip_count,
+                'Val (In Lacs) (WIP-Credit)': wip_val,
+                'No (Visit Pending)': vp_count,
+                'Val (In Lacs) (Visit Pending)': vp_val
+            }, ignore_index=True)
+
+        # Assuming output_df2 is already created and populated
+
+        # Calculate totals for each numeric column
+        totals4 = {
+            'CBM': 'Total',
+            'No (Spill File)': output_df4['No (Spill File)'].sum(),
+            'Val (In Lacs) (Spill File)': output_df4['Val (In Lacs) (Spill File)'].sum(),
+            'No (Fresh Login)': output_df4['No (Fresh Login)'].sum(),
+            'Val (In Lacs) (Fresh Login)': output_df4['Val (In Lacs) (Fresh Login)'].sum(),
+            'No (Total File)': output_df4['No (Total File)'].sum(),
+            'Val (In Lacs) (Total File)': output_df4['Val (In Lacs) (Total File)'].sum(),
+            'No (Sanction/Disbursed)': output_df4['No (Sanction/Disbursed)'].sum(),
+            'Val (In Lacs) (Sanction/Disbursed)': output_df4['Val (In Lacs) (Sanction/Disbursed)'].sum(),
+            'No (Reject/Withdraw)': output_df4['No (Reject/Withdraw)'].sum(),
+            'Val (In Lacs) (Reject/Withdraw)': output_df4['Val (In Lacs) (Reject/Withdraw)'].sum(),
+            'No (Recommend)': output_df4['No (Recommend)'].sum(),
+            'Val (In Lacs) (Recommend)': output_df4['Val (In Lacs) (Recommend)'].sum(),
+            'No (Query-Sales)': output_df4['No (Query-Sales)'].sum(),
+            'Val (In Lacs) (Query-Sales)': output_df4['Val (In Lacs) (Query-Sales)'].sum(),
+            'No (WIP-Credit)': output_df4['No (WIP-Credit)'].sum(),
+            'Val (In Lacs) (WIP-Credit)': output_df4['Val (In Lacs) (WIP-Credit)'].sum(),
+            'No (Visit Pending)': output_df4['No (Visit Pending)'].sum(),
+            'Val (In Lacs) (Visit Pending)': output_df4['Val (In Lacs) (Visit Pending)'].sum()
+        }
+
+        # Append the totals row to output_df2
+        output_df4 = output_df4.append(totals4, ignore_index=True)
+
         # Save both dataframes to a temporary Excel file with two sheets
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx')
         with pd.ExcelWriter(temp_file.name, engine='xlsxwriter') as writer:
-            output_df1.to_excel(writer, index=False, sheet_name='Report1')
-            output_df2.to_excel(writer, index=False, sheet_name='Report2')
+            output_df1.to_excel(writer, index=False, sheet_name='CCM FTD')
+            output_df2.to_excel(writer, index=False, sheet_name='CCM MTD')
+            output_df3.to_excel(writer, index=False, sheet_name='CBM FTD')
+            output_df4.to_excel(writer, index=False, sheet_name='CBM MTD')
+
 
         temp_file_path = temp_file.name
 
@@ -442,6 +317,8 @@ def index():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
 
 
 
