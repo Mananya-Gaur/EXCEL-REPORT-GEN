@@ -23,6 +23,7 @@ def index():
         # First DataFrame processing (from code1)
         df1 = df.copy()
         df1['Login Date'] = pd.to_datetime(df1['Login Date'], format='%d-%m-%Y')
+        df1['Decision date'] = pd.to_datetime(df1['Decision date'], format='%d-%m-%Y')
         filtered_df = df1[df1['Login Date'] == selected_date]
 
         output_df1 = pd.DataFrame(columns=[
@@ -32,19 +33,20 @@ def index():
             'No (Disbursed)', 'Val (In Lacs) (Disbursed)'
         ])
 
+        groupeda = df1.groupby(['CCM'])
         grouped = filtered_df.groupby(['CCM'])
 
-        for (ccm), group in grouped:
-            login_count = group['Lead ID (Synofin)'].nunique()
-            login_val = group['Request Amount'].sum() / 100000
-            sanction_count = group[group['Initial File Status (Credit)'] == 'Sanction'].shape[0]
-            sanction_val = group[group['Initial File Status (Credit)'] == 'Sanction']['Sanction Amount'].sum() / 100000
-            reject_count = group[group['Initial File Status (Credit)'] == 'Reject'].shape[0]
-            reject_val = group[group['Initial File Status (Credit)'] == 'Reject']['Request Amount'].sum() / 100000
+        for (ccm), group in groupeda:
+            login_count = group[group['Login Date'] == selected_date]['Lead ID (Synofin)'].nunique()
+            login_val = group[group['Login Date'] == selected_date]['Request Amount'].sum() / 100000
+            sanction_count = group[group['Decision date'] == selected_date][group['Initial File Status (Credit)'] == 'Sanction'].shape[0]
+            sanction_val = group[group['Decision date'] == selected_date][group['Initial File Status (Credit)'] == 'Sanction']['Sanction Amount'].sum() / 100000
+            reject_count = group[group['Decision date'] == selected_date][group['Initial File Status (Credit)'] == 'Reject'].shape[0]
+            reject_val = group[group['Decision date'] == selected_date][group['Initial File Status (Credit)'] == 'Reject']['Request Amount'].sum() / 100000
             decision_count = sanction_count + reject_count
             decision_val = sanction_val + reject_val
-            disbursed_count = group[group['Disb. Date'].notnull()].shape[0]
-            disbursed_val = group[group['Disb. Date'].notnull()]['Sanction Amount'].sum() / 100000
+            disbursed_count = group[group['Decision date'] == selected_date][group['Disb. Date'].notnull()].shape[0]
+            disbursed_val = group[group['Decision date'] == selected_date][group['Disb. Date'].notnull()]['Sanction Amount'].sum() / 100000
 
             output_df1 = output_df1.append({
                 'CCM': ccm,
@@ -172,19 +174,19 @@ def index():
             'No (Disbursed)', 'Val (In Lacs) (Disbursed)'
         ])
 
-        grouped1 = filtered_df.groupby(['CBM'])
+        grouped1 = df1.groupby(['CBM'])
 
         for (cbm), group in grouped1:
-            login_count = group['Lead ID (Synofin)'].nunique()
-            login_val = group['Request Amount'].sum() / 100000
-            sanction_count = group[group['Initial File Status (Credit)'] == 'Sanction'].shape[0]
-            sanction_val = group[group['Initial File Status (Credit)'] == 'Sanction']['Sanction Amount'].sum() / 100000
-            reject_count = group[group['Initial File Status (Credit)'] == 'Reject'].shape[0]
-            reject_val = group[group['Initial File Status (Credit)'] == 'Reject']['Request Amount'].sum() / 100000
+            login_count = group[group['Login Date']== selected_date]['Lead ID (Synofin)'].nunique()
+            login_val = group[group['Login Date']== selected_date]['Request Amount'].sum() / 100000
+            sanction_count = group[group['Decision date']== selected_date][group['Initial File Status (Credit)'] == 'Sanction'].shape[0]
+            sanction_val = group[group['Decision date']== selected_date][group['Initial File Status (Credit)'] == 'Sanction']['Sanction Amount'].sum() / 100000
+            reject_count = group[group['Decision date']== selected_date][group['Initial File Status (Credit)'] == 'Reject'].shape[0]
+            reject_val = group[group['Decision date']== selected_date][group['Initial File Status (Credit)'] == 'Reject']['Request Amount'].sum() / 100000
             decision_count = sanction_count + reject_count
             decision_val = sanction_val + reject_val
-            disbursed_count = group[group['Disb. Date'].notnull()].shape[0]
-            disbursed_val = group[group['Disb. Date'].notnull()]['Sanction Amount'].sum() / 100000
+            disbursed_count = group[group['Decision date']== selected_date][group['Disb. Date'].notnull()].shape[0]
+            disbursed_val = group[group['Decision date']== selected_date][group['Disb. Date'].notnull()]['Sanction Amount'].sum() / 100000
 
             output_df3 = output_df3.append({
                 'CBM': cbm,
