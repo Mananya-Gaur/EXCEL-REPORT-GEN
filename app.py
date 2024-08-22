@@ -102,8 +102,8 @@ def index():
             frshval = aug_group['Request Amount'].sum() / 100000
             totalno = spfno + frshlg
             totalval = spfval + frshval
-            sandis_count = group[group['Initial File Status (Credit)'] == 'Sanction'].shape[0]
-            sandis_val = group[group['Initial File Status (Credit)'] == 'Sanction']['Sanction Amount'].sum() / 100000
+            sandis_count = group[group['Initial File Status (Credit)'] == 'Sanction'].shape[0] + group[group['Initial File Status (Credit)'] == 'Disbursed'].shape[0]
+            sandis_val = group[group['Initial File Status (Credit)'] == 'Sanction']['Sanction Amount'].sum() / 100000 + group[group['Initial File Status (Credit)'] == 'Disbursed']['Sanction Amount'].sum() / 100000
             reject_count = group[group['Initial File Status (Credit)'] == 'Reject'].shape[0]
             reject_val = group[group['Initial File Status (Credit)'] == 'Reject']['Request Amount'].sum() / 100000
             rec_count = group[group['Initial File Status (Credit)'] == 'Recommend'].shape[0]
@@ -237,8 +237,8 @@ def index():
             frshval = aug_group['Request Amount'].sum() / 100000
             totalno = spfno + frshlg
             totalval = spfval + frshval
-            sandis_count = group[group['Initial File Status (Credit)'] == 'Sanction'].shape[0]
-            sandis_val = group[group['Initial File Status (Credit)'] == 'Sanction']['Sanction Amount'].sum() / 100000
+            sandis_count = group[group['Initial File Status (Credit)'] == 'Sanction'].shape[0] + group[group['Initial File Status (Credit)'] == 'Disbursed'].shape[0]
+            sandis_val = group[group['Initial File Status (Credit)'] == 'Sanction']['Sanction Amount'].sum() / 100000 + group[group['Initial File Status (Credit)'] == 'Disbursed']['Sanction Amount'].sum() / 100000
             reject_count = group[group['Initial File Status (Credit)'] == 'Reject'].shape[0]
             reject_val = group[group['Initial File Status (Credit)'] == 'Reject']['Request Amount'].sum() / 100000
             rec_count = group[group['Initial File Status (Credit)'] == 'Recommend'].shape[0]
@@ -313,7 +313,7 @@ def index():
             qs_count5 = group[group['Initial File Status (Credit)'] == 'Query- Sales'].shape[0]
             sanction_count5 = group[group['Initial File Status (Credit)'] == 'Sanction'].shape[0]
             disb_count5 = group[group['Initial File Status (Credit)'] == 'Disbursed'].shape[0]
-            gt_count= vp_count5+wip_count5+recc_count5+reject_count5+sanction_count5+disb_count5
+            gt_count= vp_count5+wip_count5+recc_count5+reject_count5+sanction_count5+qs_count5+disb_count5
 
             output_df5 = output_df5.append({
                 'CCM': ccm,
@@ -417,7 +417,3 @@ def index():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-
-
