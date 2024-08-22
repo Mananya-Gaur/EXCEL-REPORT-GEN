@@ -21,6 +21,7 @@ def index():
         df = pd.read_excel(file1)
 
         # First DataFrame processing (from code1)
+        # First DataFrame processing (from code1)
         df1 = df.copy()
         df1['Login Date'] = pd.to_datetime(df1['Login Date'], format='%d-%m-%Y')
         df1['Decision date'] = pd.to_datetime(df1['Decision date'], format='%d-%m-%Y')
@@ -346,6 +347,30 @@ def index():
         # Append the totals row to output_df2
         output_df5 = output_df5.append(totals5, ignore_index=True)
 
+        df_selected = df[['CCM', 'Login to PD TAT']]
+        df_selected['Login to PD TAT'] = pd.to_numeric(df_selected['Login to PD TAT'], errors='coerce')
+        avg_tat_by_ccm = df_selected.groupby('CCM')['Login to PD TAT'].mean().reset_index()
+
+        totals6 = {
+            'CCM': 'Grand Total',
+            'Login to PD TAT': avg_tat_by_ccm['Login to PD TAT'].mean()
+
+        }
+        # Append the totals row to output_df2
+        avg_tat_by_ccm = avg_tat_by_ccm.append(totals6, ignore_index=True)
+
+        df_selected = df[["Visit Official Name\n(Credit Part)", 'Login to PD TAT']]
+        df_selected['Login to PD TAT'] = pd.to_numeric(df_selected['Login to PD TAT'], errors='coerce')
+        avg_tat_by_bcm = df_selected.groupby("Visit Official Name\n(Credit Part)")['Login to PD TAT'].mean().reset_index()
+
+        totals7 = {
+            "Visit Official Name\n(Credit Part)": 'Grand Total',
+            'Login to PD TAT': avg_tat_by_bcm['Login to PD TAT'].mean()
+
+        }
+        # Append the totals row to output_df2
+        avg_tat_by_bcm = avg_tat_by_bcm.append(totals7, ignore_index=True)
+
 
         # Save dataframes to a temporary Excel file with multiple sheets
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx')
@@ -355,13 +380,13 @@ def index():
             output_df3.to_excel(writer, index=False, sheet_name='CBM FTD')
             output_df4.to_excel(writer, index=False, sheet_name='CBM MTD')
             output_df5.to_excel(writer, index=False, sheet_name='SWS')
-
+            avg_tat_by_ccm.round(3).to_excel(writer, index=False, sheet_name='CCM TAT Avg')
+            avg_tat_by_bcm.round(3).to_excel(writer, index=False, sheet_name='BCM TAT Avg')
 
         temp_file_path = temp_file.name
 
         # Load the workbook and apply formatting
         workbook = load_workbook(temp_file_path)
-
         # Define styles
         header_font = Font(bold=True, color="FFFFFF", size=12, name='Calibri')
         header_fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
