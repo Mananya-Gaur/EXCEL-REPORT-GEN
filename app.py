@@ -16,8 +16,10 @@ from email.message import EmailMessage
 import ssl
 
 
+
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Needed for session handling
+
 
 def send_email_with_attachment(
         sender_email,
@@ -94,11 +96,14 @@ def send_email_with_attachment(
 
 # Usage example
 
+pathfor = None
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
         file1 = request.files['file1']
         selected_date = pd.to_datetime(request.form['date'])  # Get date input from the user
+
 
         # Process the uploaded file
         df = pd.read_excel(file1)
@@ -534,17 +539,28 @@ def index():
 
         # Save the modified workbook back to the same file
         workbook.save(temp_file_path)
+        global pathfor
+        pathfor = temp_file_path
 
         # Return the modified Excel file as a download
-        subject = 'Here is Daily Your MIS Excel Report'
-        body = 'Please find the attached Excel report.'
-        sender_email = 'mananya.gaur@paisabuddy.com'
-        sender_password = 'Pb@101010'  # Be cautious with passwords
-        recipient_emails = ['tanishka.narula@paisabuddy.com']
-        send_email_with_attachment(sender_email, sender_password,  recipient_emails, subject, body, temp_file_path, 'smtp.zoho.com', 465, selected_date.strftime("%d-%m-%Y")+' '+'Updated MIS Report.xlsx',use_ssl=True)
         return send_file(temp_file_path, as_attachment=True, download_name= selected_date.strftime("%d-%m-%Y")+' '+'Updated MIS Report.xlsx')
 
     return render_template('index.html')
+
+@app.route('/send_email', methods=['POST'])
+def trigger_send():
+    # selected_date = pd.to_datetime(request.form['date'])
+    subject = 'Here is Daily Your MIS Excel Report'
+    body = 'Please find the attached Excel report.'
+    sender_email = 'mananya.gaur@paisabuddy.com'
+    sender_password = 'Pb@101010'  # Be cautious with passwords
+    recipient_emails = ['tanishka.narula@paisabuddy.com','kumud.jain@paisabuddy.com']
+
+    send_email_with_attachment(sender_email, sender_password, recipient_emails, subject, body, pathfor, 'smtp.zoho.com', 465, 'Updated MIS Report.xlsx', use_ssl=True)
+
+    return render_template('index.html')
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
