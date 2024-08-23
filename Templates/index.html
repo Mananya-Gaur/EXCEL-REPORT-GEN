@@ -9,6 +9,7 @@
 <body>
     <div class="container">
         <h1>Excel Report Generator</h1>
+        <!-- Form for uploading file and generating the report -->
         <form action="/" method="post" enctype="multipart/form-data">
             <table>
                 <tr>
@@ -28,13 +29,20 @@
                     </td>
                 </tr>
             </table>
-            <button type="submit">Generate Report</button>
+            <button type="submit" class="btn btn-primary">Generate Report</button>
         </form>
-        <footer>
+
+        <hr>
+
+        <!-- Form for sending the generated report via email -->
+        <form action="/send_email" method="post">
+            <h2>Send Report via Email</h2>
+            <button type="submit" class="btn btn-success">Send Email</button>
+        </form>
+
+        <footer class="mt-5">
             &copy; 2024 Your Company. All Rights Reserved.
         </footer>
     </div>
 </body>
 </html>
-
-
