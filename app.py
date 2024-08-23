@@ -1,15 +1,98 @@
 from flask import Flask, render_template, request, send_file
 import pandas as pd
-import os
 from io import BytesIO
 import tempfile
 from datetime import datetime
 from openpyxl import load_workbook
-from openpyxl.styles import PatternFill, Font, Alignment
+from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 import re
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email.mime.text import MIMEText
+from email import encoders
+import os
+import smtplib
+from email.message import EmailMessage
+import ssl
+
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Needed for session handling
+
+def send_email_with_attachment(
+        sender_email,
+        sender_password,
+        recipient_emails,
+        subject,
+        body,
+        attachment_path,
+        smtp_server,
+        smtp_port,
+        new_filename=None,
+        use_ssl=True
+):
+    """
+    Sends an email with an Excel attachment to multiple recipients.
+
+    Parameters:
+        sender_email (str): Sender's email address.
+        sender_password (str): Sender's email password or app-specific password.
+        recipient_emails (list): List of recipient email addresses.
+        subject (str): Subject of the email.
+        body (str): Body text of the email.
+        attachment_path (str): File path to the Excel attachment.
+        smtp_server (str): SMTP server address.
+        smtp_port (int): SMTP server port.
+        use_ssl (bool): Whether to use SSL for the SMTP connection.
+
+    Returns:
+        None
+    """
+    server = None  # Initialize server to None
+    try:
+        # Create EmailMessage object
+        msg = EmailMessage()
+        msg['From'] = sender_email
+        msg['To'] = ', '.join(recipient_emails)
+        msg['Subject'] = subject
+        msg.set_content(body)
+
+        # Read and add the Excel attachment
+        with open(attachment_path, 'rb') as f:
+            file_data = f.read()
+            file_name = new_filename if new_filename else f.name.split('/')[-1]  # Use new filename if provided
+
+        msg.add_attachment(
+            file_data,
+            maintype='application',
+            subtype='vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            filename=file_name
+        )
+
+        # Set up the SMTP server connection
+        if use_ssl:
+            context = ssl.create_default_context()
+            server = smtplib.SMTP_SSL(smtp_server, smtp_port, context=context)
+            server.login(sender_email, sender_password)
+        else:
+            server = smtplib.SMTP(smtp_server, smtp_port)
+            server.starttls(context=ssl.create_default_context())
+            server.login(sender_email, sender_password)
+
+        # Send the email
+        server.send_message(msg)
+
+        print("Email sent successfully to:", recipient_emails)
+
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+    finally:
+        if server:
+            server.quit()  # Ensure server.quit() is called if server is defined
+
+
+# Usage example
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -389,13 +472,24 @@ def index():
         workbook = load_workbook(temp_file_path)
         # Define styles
         header_font = Font(bold=True, color="FFFFFF", size=12, name='Calibri')
-        header_fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
+        header_fill = PatternFill(start_color="9C0201", end_color="9C0201", fill_type="solid")
 
         total_font = Font(bold=True, color="FFFFFF", size=12, name='Calibri')
-        total_fill = PatternFill(start_color="0000FF", end_color="0000FF", fill_type="solid")
+        total_fill = PatternFill(start_color="3C3B6E", end_color="3C3B6E", fill_type="solid")
 
         cell_font = Font(size=11, name='Calibri')
         alignment = Alignment(horizontal='center', vertical='center')
+
+        # Define border style
+        thin_border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+
+        # Define off-white fill for non-total, non-header cells
+        off_white_fill = PatternFill(start_color="F7F4EB", end_color="F7F4EB", fill_type="solid")
 
         for sheet_name in workbook.sheetnames:
             worksheet = workbook[sheet_name]
@@ -405,21 +499,25 @@ def index():
                 cell.font = header_font
                 cell.fill = header_fill
                 cell.alignment = alignment
+                cell.border = thin_border  # Apply border to header cells
 
             # Apply styles to the cells
             for row in worksheet.iter_rows(min_row=2, max_col=worksheet.max_column, max_row=worksheet.max_row):
                 for cell in row:
                     cell.font = cell_font
                     cell.alignment = alignment
+                    cell.border = thin_border  # Apply border to all cells
 
                 # Apply formatting to the "Total" row
                 if row[0].value == 'Total' or row[0].value == 'Grand Total':
                     for cell in row:
                         cell.font = total_font
                         cell.fill = total_fill
+                        cell.border = thin_border  # Apply border to total cells
                 else:
                     for cell in row:
-                        cell.fill = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
+                        cell.fill = off_white_fill  # Apply off-white color to non-total, non-header cells
+                        cell.border = thin_border  # Ensure border is applied to non-total cells
 
             # Adjust column widths based on the maximum length of the content
             for column in worksheet.columns:
@@ -438,7 +536,13 @@ def index():
         workbook.save(temp_file_path)
 
         # Return the modified Excel file as a download
-        return send_file(temp_file_path, as_attachment=True, download_name='output.xlsx')
+        subject = 'Here is Daily Your MIS Excel Report'
+        body = 'Please find the attached Excel report.'
+        sender_email = 'mananya.gaur@paisabuddy.com'
+        sender_password = 'Pb@101010'  # Be cautious with passwords
+        recipient_emails = ['tanishka.narula@paisabuddy.com']
+        send_email_with_attachment(sender_email, sender_password,  recipient_emails, subject, body, temp_file_path, 'smtp.zoho.com', 465, selected_date.strftime("%d-%m-%Y")+' '+'Updated MIS Report.xlsx',use_ssl=True)
+        return send_file(temp_file_path, as_attachment=True, download_name= selected_date.strftime("%d-%m-%Y")+' '+'Updated MIS Report.xlsx')
 
     return render_template('index.html')
 
